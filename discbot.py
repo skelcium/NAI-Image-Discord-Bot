@@ -3,6 +3,7 @@ import random
 import requests
 import time
 import zipfile
+import json
 from typing import Literal
 
 import discord
@@ -11,15 +12,19 @@ from discord.ext import commands
 
 endpoint = 'https://api.novelai.net/ai/generate-image'
 
-token = None
-with open('./token.txt', 'r') as token_in:
-    token = token_in.read().strip()
+try:
+    with open('settings.json') as f:
+        settings = json.load(f)
+except FileNotFoundError:
+    print('No settings file found!')
+    time.sleep(5)
+    exit()
 
 headers = {
     'authority': 'api.novelai.net',
     'accept': '*/*',
     'accept-language': 'en-US,en;q=0.9',
-    'authorization': token,
+    'authorization': settings['nai_token'],
     'content-type': 'application/json',
     'origin': 'https://novelai.net',
     'referer': 'https://novelai.net/'
@@ -49,10 +54,9 @@ async def gen(ctx: discord.Interaction, resolution: Literal['wide', 'tall', 'squ
         #	return
 
         print(f"Resolution: {resolution} | Model: {model}")
-        banned_words = ["naked armadillo"]
         allow_proceed = True
 
-        for word in banned_words:
+        for word in settings['banned_words']:
             if word in prompt.lower():
                 allow_proceed = False
 
@@ -181,4 +185,4 @@ async def aimasterpiece(ctx: discord.Interaction, resolution: app_commands.Choic
     await gen(ctx, resolution.value, model.value, 'masterpiece, best quality, ' + prompt)
 
 
-client.run('')  # CLIENT KEY
+client.run(settings['discord_token'])  # CLIENT KEY
